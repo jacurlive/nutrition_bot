@@ -106,11 +106,18 @@ async def process_language(callback: types.CallbackQuery):
         print(1)
         await callback.message.answer(message_answer)
 
+    await callback.answer()
 
-@dp.message(F.photo, MealStates.waiting_for_photo)
+
+@dp.message(F.photo)
 async def get_meal_photo(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     language = (await get_settings(user_id)).get("language", "ru")
+
+    processing_photo_message = await get_localized_message(language, "processing_photo")
+
+    msg = await message.answer(processing_photo_message)
+    message_id = msg.message_id
 
     # Сохраняем фото
     photo = message.photo[-1]
@@ -123,6 +130,7 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     response = requests.get(file_url)
 
     if response.status_code != 200:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
         await message.answer(await get_localized_message(language, "error"))
         await state.clear()
         return
@@ -134,6 +142,7 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     gpt_data = await analyze_image_with_gpt(language, local_path)
 
     if "error" in gpt_data:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
         await message.answer(await get_localized_message(language, "food_not_recognized"))
         await state.clear()
         return
@@ -175,6 +184,90 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
         [types.InlineKeyboardButton(text=text_button_2, callback_data="edit_grams")],
         [types.InlineKeyboardButton(text=text_button_3, callback_data="cancel_meal")]
     ])
+
+    await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
+
+    await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
+    await state.clear()
+
+
+@dp.message(F.photo, MealStates.waiting_for_photo)
+async def get_meal_photo(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    language = (await get_settings(user_id)).get("language", "ru")
+
+    processing_photo_message = await get_localized_message(language, "processing_photo")
+
+    msg = await message.answer(processing_photo_message)
+    message_id = msg.message_id
+
+    # Сохраняем фото
+    photo = message.photo[-1]
+    file_info = await bot.get_file(photo.file_id)
+    file_path = file_info.file_path
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    local_path = f"image/{user_id}-{timestamp}.jpg"
+
+    file_url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
+    response = requests.get(file_url)
+
+    if response.status_code != 200:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
+        await message.answer(await get_localized_message(language, "error"))
+        await state.clear()
+        return
+
+    with open(local_path, "wb") as f:
+        f.write(response.content)
+
+    # Анализируем
+    gpt_data = await analyze_image_with_gpt(language, local_path)
+
+    if "error" in gpt_data:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
+        await message.answer(await get_localized_message(language, "food_not_recognized"))
+        await state.clear()
+        return
+
+    # Сохраняем в RAM (временно)
+    TEMP_RECOGNIZED_MEALS[user_id] = {
+        "data": gpt_data,
+        "photo": local_path
+    }
+
+    food_name = gpt_data["food_name"]
+    calories = gpt_data["calories"]
+    protein = gpt_data["protein"]
+    fat = gpt_data["fat"]
+    carbs = gpt_data["carbs"]
+    grams = 100
+
+    calorie_text = await get_localized_message(language, "calorie")
+    protein_text = await get_localized_message(language, "protein")
+    fat_text = await get_localized_message(language, "fat")
+    carbs_text = await get_localized_message(language, "carbs")
+
+    text = (
+        f"🍽️ <b>{food_name.title()}</b>, {grams} g\n"
+        f"🔥 {calorie_text}: {calories} kkal\n"
+        f"🍗 {protein_text}: {protein} g\n"
+        f"🥑 {fat_text}: {fat} g\n"
+        f"🍞 {carbs_text}: {carbs} g\n\n"
+        f"<i>{await get_localized_message(language, 'confirm_meal_prompt')}</i>"
+    )
+
+    text_button_1 = await get_localized_message(language, "save_button")
+    text_button_2 = await get_localized_message(language, "edit_grams_button")
+    text_button_3 = await get_localized_message(language, "cancel_button")
+
+    # Кнопки
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text=text_button_1, callback_data="save_meal")],
+        [types.InlineKeyboardButton(text=text_button_2, callback_data="edit_grams")],
+        [types.InlineKeyboardButton(text=text_button_3, callback_data="cancel_meal")]
+    ])
+
+    await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
 
     await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await state.clear()
@@ -223,6 +316,8 @@ async def process_save_meal(callback: types.CallbackQuery):
     else:
         await callback.message.answer(error_text)
 
+    await callback.answer()
+
 
 @dp.callback_query(F.data == "cancel_meal")
 async def process_cancel_meal(callback: types.CallbackQuery):
@@ -235,6 +330,8 @@ async def process_cancel_meal(callback: types.CallbackQuery):
 
     cancel_text = await get_localized_message(language, "meal_canceled")
     await callback.message.answer(cancel_text, reply_markup=main_menu_k)
+
+    await callback.answer()
 
 
 @dp.message(UserSettingsStates.choose_goal)
@@ -395,6 +492,8 @@ async def handle_diary_navigation(callback: types.CallbackQuery):
         reply_markup=diary_navigation,
         parse_mode="html"
     )
+
+    await callback.answer()
 
 
 @dp.message()

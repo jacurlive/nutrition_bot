@@ -41,7 +41,8 @@ class Localization:
             "cancel_button": "❌ Отменить",
             "meal_saved": "✅ Блюдо сохранено!",
             "meal_canceled": "❌ Добавление отменено.",
-            "default_message": "❗️Используйте кнопки для использования бота)"
+            "default_message": "❗️Используйте кнопки для использования бота)",
+            "processing_photo": "⏳ Обрабатываем фото... Пожалуйста, подождите пару секунд."
         },
         "en": {
             "add_meal_btn": "📸 Add meal",
@@ -79,7 +80,8 @@ class Localization:
             "cancel_button": "❌ Cancel",
             "meal_saved": "✅ Meal saved!",
             "meal_canceled": "❌ Meal entry canceled.",
-            "default_message": "❗️Select buttons for use bot)"
+            "default_message": "❗️Select buttons for use bot)",
+            "processing_photo": "⏳ Processing the photo... Please wait a few seconds."
         },
         "uz": {
             "add_meal_btn": "📸 Ovqat qoshish",
@@ -117,7 +119,8 @@ class Localization:
             "cancel_button": "❌ Bekor qilish",
             "meal_saved": "✅ Ovqat saqlandi!",
             "meal_canceled": "❌ Ovqat qo‘shish bekor qilindi.",
-            "default_message": "❗️Botdan foydalanish uchun tugmalardan foydalaning)"
+            "default_message": "❗️Botdan foydalanish uchun tugmalardan foydalaning)",
+            "processing_photo": "⏳ Rasm qayta ishlanmoqda... Iltimos, bir necha soniya kuting."
         }
     }
 
