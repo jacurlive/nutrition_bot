@@ -83,3 +83,9 @@ class UserStatsAPIView(APIView):
             "active_7_days": active_7_days,
             "active_1_days": active_1_days
         })
+    
+
+class UserListByMorningReminderAPIView(generics.ListAPIView):
+    queryset = AppUser.objects.filter(morning_summary_enabled=True)
+    serializer_class = AppUserSerializer
+    permission_classes = [CustomPermission]

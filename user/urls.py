@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import AppUserViewSet, DiaryViewSet, MealViewSet, AppUserDetailByTelegramID, DiaryViewByDate, UserStatsAPIView
+from .views import AppUserViewSet, DiaryViewSet, MealViewSet, AppUserDetailByTelegramID, DiaryViewByDate, UserStatsAPIView, UserListByMorningReminderAPIView
 
 
 router = DefaultRouter()
@@ -14,5 +14,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('users/telegram/<int:telegram_id>', AppUserDetailByTelegramID.as_view()),
     path('diary/date/<int:user_id>/<str:year>/<str:month>/<str:day>', DiaryViewByDate.as_view()),
-    path("stats/", UserStatsAPIView.as_view())
+    path("stats/", UserStatsAPIView.as_view()),
+    path("users/reminder", UserListByMorningReminderAPIView.as_view())
 ]
