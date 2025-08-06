@@ -33,6 +33,7 @@ from utils.keyboards import (
     language_keyboard,
     main_menu_keyboard,
     settings_menu_keyboard,
+    edit_meal_keyboard
 )
 
 from utils.states import (
@@ -92,6 +93,8 @@ async def start_command(message: types.Message):
 
 @dp.callback_query(lambda c: c.data in ["uz", "ru", "en"])
 async def process_language(callback: types.CallbackQuery):
+    await callback.answer()
+
     language = callback.data
     user_id = callback.from_user.id
 
@@ -105,8 +108,6 @@ async def process_language(callback: types.CallbackQuery):
         message_answer = await get_localized_message("none", "error")
         print(1)
         await callback.message.answer(message_answer)
-
-    await callback.answer()
 
 
 @dp.message(F.photo)
@@ -146,6 +147,8 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
         await message.answer(await get_localized_message(language, "food_not_recognized"))
         await state.clear()
         return
+    
+    await state.update_data(meal_data=gpt_data)
 
     # Сохраняем в RAM (временно)
     TEMP_RECOGNIZED_MEALS[user_id] = {
@@ -158,7 +161,6 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     protein = gpt_data["protein"]
     fat = gpt_data["fat"]
     carbs = gpt_data["carbs"]
-    grams = 100
 
     calorie_text = await get_localized_message(language, "calorie")
     protein_text = await get_localized_message(language, "protein")
@@ -166,7 +168,7 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     carbs_text = await get_localized_message(language, "carbs")
 
     text = (
-        f"🍽️ <b>{food_name.title()}</b>, {grams} g\n"
+        f"🍽️ <b>{food_name.title()}</b>\n"
         f"🔥 {calorie_text}: {calories} kkal\n"
         f"🍗 {protein_text}: {protein} g\n"
         f"🥑 {fat_text}: {fat} g\n"
@@ -188,7 +190,6 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
 
     await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
-    await state.clear()
 
 
 @dp.message(F.photo, MealStates.waiting_for_photo)
@@ -229,6 +230,8 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
         await state.clear()
         return
 
+    await state.update_data(meal_data=gpt_data)
+
     # Сохраняем в RAM (временно)
     TEMP_RECOGNIZED_MEALS[user_id] = {
         "data": gpt_data,
@@ -240,7 +243,6 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     protein = gpt_data["protein"]
     fat = gpt_data["fat"]
     carbs = gpt_data["carbs"]
-    grams = 100
 
     calorie_text = await get_localized_message(language, "calorie")
     protein_text = await get_localized_message(language, "protein")
@@ -248,7 +250,7 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     carbs_text = await get_localized_message(language, "carbs")
 
     text = (
-        f"🍽️ <b>{food_name.title()}</b>, {grams} g\n"
+        f"🍽️ <b>{food_name.title()}</b>\n"
         f"🔥 {calorie_text}: {calories} kkal\n"
         f"🍗 {protein_text}: {protein} g\n"
         f"🥑 {fat_text}: {fat} g\n"
@@ -270,11 +272,14 @@ async def get_meal_photo(message: types.Message, state: FSMContext):
     await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
 
     await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
-    await state.clear()
 
 
 @dp.callback_query(F.data == "save_meal")
-async def process_save_meal(callback: types.CallbackQuery):
+async def process_save_meal(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    await state.clear()
+
     user_id = callback.from_user.id
     language = await get_language(user_id)
     user_id_from_api = await get_settings(user_id)
@@ -316,11 +321,11 @@ async def process_save_meal(callback: types.CallbackQuery):
     else:
         await callback.message.answer(error_text)
 
-    await callback.answer()
-
 
 @dp.callback_query(F.data == "cancel_meal")
 async def process_cancel_meal(callback: types.CallbackQuery):
+    await callback.answer()
+
     user_id = callback.from_user.id
     language = await get_language(user_id)
 
@@ -331,7 +336,82 @@ async def process_cancel_meal(callback: types.CallbackQuery):
     cancel_text = await get_localized_message(language, "meal_canceled")
     await callback.message.answer(cancel_text, reply_markup=main_menu_k)
 
+
+@dp.callback_query(F.data == "edit_grams")
+async def edit_meal_callback(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
+
+    user_id = callback.from_user.id
+    language = await get_language(user_id)
+
+    edit_keyboard = await edit_meal_keyboard(language)
+    choose_message = await get_localized_message(language, "choose_message")
+
+    await callback.message.answer(choose_message, reply_markup=edit_keyboard)
+
+
+@dp.callback_query(lambda c: c.data.startswith("edit_param:"))
+async def start_edit_param(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    user_id = callback.from_user.id
+    language = await get_language(user_id)
+    param = callback.data.split(":")[1]
+    await state.update_data(editing_param=param)
+    await state.set_state(MealStates.waiting_for_new_param_value)
+
+    new_param_message = await get_localized_message(language, "type_new_param")
+
+    await callback.message.answer(new_param_message)
+
+
+@dp.message(MealStates.waiting_for_new_param_value)
+async def handle_new_value(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    language = await get_language(user_id)
+
+    try:
+        new_value = float(message.text)
+        if new_value <= 0:
+            raise ValueError
+    except ValueError:
+        invalid_number_message = await get_localized_message(language, "invalid_number")
+        await message.answer(invalid_number_message)
+        return
+
+    data = await state.get_data()
+    meal_data = data.get("meal_data", {})
+    editing_param = data.get("editing_param")
+
+    meal_data[editing_param] = round(new_value, 2)
+    await state.update_data(meal_data=meal_data)
+
+    calorie_text = await get_localized_message(language, "calorie")
+    protein_text = await get_localized_message(language, "protein")
+    fat_text = await get_localized_message(language, "fat")
+    carbs_text = await get_localized_message(language, "carbs")
+
+
+    text = (
+        f"{meal_data['food_name']}\n"
+        f"🔥 {calorie_text}: {meal_data['calories']} kkal\n"
+        f"🍗 {protein_text}: {meal_data['protein']} g\n"
+        f"🥑 {fat_text}: {meal_data['fat']} g\n"
+        f"🍞 {carbs_text}: {meal_data['carbs']} g"
+    )
+
+    text_button_1 = await get_localized_message(language, "save_button")
+    text_button_2 = await get_localized_message(language, "edit_grams_button")
+    text_button_3 = await get_localized_message(language, "cancel_button")
+
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text=text_button_1, callback_data="save_meal")],
+        [types.InlineKeyboardButton(text=text_button_2, callback_data="edit_grams")],
+        [types.InlineKeyboardButton(text=text_button_3, callback_data="cancel_meal")]
+    ])
+
+    param_updated_message = await get_localized_message(language, "param_updated")
+    await message.answer(param_updated_message)
+    await message.answer(text, reply_markup=keyboard)
 
 
 @dp.message(UserSettingsStates.choose_goal)
@@ -446,6 +526,8 @@ async def change_language_process(message: types.Message, state: FSMContext):
 
 @dp.callback_query(lambda c: c.data.startswith("diary_prev_") or c.data.startswith("diary_next_"))
 async def handle_diary_navigation(callback: types.CallbackQuery):
+    await callback.answer()
+
     user_id = callback.from_user.id
     language = await get_language(user_id)
     user_id_from_api = await get_settings(user_id)
@@ -485,15 +567,13 @@ async def handle_diary_navigation(callback: types.CallbackQuery):
         f"🍞 {carbs_text}: <b>{total_carbs} g</b>"
     )
 
-    diary_navigation = diary_navigation_keyboard(date)
+    diary_navigation = await diary_navigation_keyboard(date)
 
     await callback.message.edit_text(
         diary_text,
         reply_markup=diary_navigation,
         parse_mode="html"
     )
-
-    await callback.answer()
 
 
 @dp.message()
@@ -621,7 +701,7 @@ async def process_message(message: types.Message, state: FSMContext):
                 f"🍞 {carbs_text}: <b>{total_carbs} g</b>"
             )
 
-            diary_navigation = diary_navigation_keyboard(today)
+            diary_navigation = await diary_navigation_keyboard(today)
 
             await message.answer(
                 diary_text,

@@ -87,7 +87,7 @@ async def change_language_keyboard(language):
     return types.ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
 
 
-def diary_navigation_keyboard(date):
+async def diary_navigation_keyboard(date):
     prev_day = (date - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     next_day = (date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -99,3 +99,27 @@ def diary_navigation_keyboard(date):
     ]
 
     return types.InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def edit_meal_keyboard(language):
+    button_text_1 = await get_localized_message(language, "calorie")
+    button_text_2 = await get_localized_message(language, "protein")
+    button_text_3 = await get_localized_message(language, "fat")
+    button_text_4 = await get_localized_message(language, "carbs")
+    button_text_5 = await get_localized_message(language, "back_to_menu")
+
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [
+            types.InlineKeyboardButton(text=f"🔥 {button_text_1}", callback_data="edit_param:calories"),
+            types.InlineKeyboardButton(text=f"🍗 {button_text_2}", callback_data="edit_param:protein")
+        ],
+        [
+            types.InlineKeyboardButton(text=f"🥑 {button_text_3}", callback_data="edit_param:fat"),
+            types.InlineKeyboardButton(text=f"🍞 {button_text_4}", callback_data="edit_param:carbs")
+        ],
+        [
+            types.InlineKeyboardButton(text=button_text_5, callback_data="back_to_meal_preview")
+        ]
+    ])
+
+    return keyboard

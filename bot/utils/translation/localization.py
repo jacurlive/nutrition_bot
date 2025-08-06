@@ -43,7 +43,11 @@ class Localization:
             "meal_canceled": "❌ Добавление отменено.",
             "default_message": "❗️Используйте кнопки для использования бота)",
             "processing_photo": "⏳ Обрабатываем фото... Пожалуйста, подождите пару секунд.",
-            "summary_text": "📊 Сводка за вчера:"
+            "summary_text": "📊 Сводка за вчера:",
+            "choose_message": "Что вы хотите изменить?",
+            "type_new_param": "Введите новое значение:",
+            "invalid_number": "Введите корректное положительное число.",
+            "param_updated": "✅ Значение обновлено."
         },
         "en": {
             "add_meal_btn": "📸 Add meal",
@@ -83,7 +87,11 @@ class Localization:
             "meal_canceled": "❌ Meal entry canceled.",
             "default_message": "❗️Select buttons for use bot)",
             "processing_photo": "⏳ Processing the photo... Please wait a few seconds.",
-            "summary_text": "📊 Summary for yesterday:"
+            "summary_text": "📊 Summary for yesterday:",
+            "choose_message": "What you want change?",
+            "type_new_param": "Type new parametr:",
+            "invalid_number": "Please enter a valid positive number.",
+            "param_updated": "✅ Value updated."
         },
         "uz": {
             "add_meal_btn": "📸 Ovqat qoshish",
@@ -123,7 +131,11 @@ class Localization:
             "meal_canceled": "❌ Ovqat qo‘shish bekor qilindi.",
             "default_message": "❗️Botdan foydalanish uchun tugmalardan foydalaning)",
             "processing_photo": "⏳ Rasm qayta ishlanmoqda... Iltimos, bir necha soniya kuting.",
-            "summary_text": "📊 Kechagi kunning yakunlari:"
+            "summary_text": "📊 Kechagi kunning yakunlari:",
+            "choose_message": "Nimani o'zgartirmoqchisiz?",
+            "type_new_param": "Yangi qiymat kiriting:",
+            "invalid_number": "Iltimos, to‘g‘ri musbat son kiriting.",
+            "param_updated": "✅ Qiymat yangilandi."
         }
     }
 
