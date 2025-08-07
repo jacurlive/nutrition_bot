@@ -350,6 +350,43 @@ async def edit_meal_callback(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(choose_message, reply_markup=edit_keyboard)
 
 
+@dp.callback_query(F.data == "back_to_meal_preview")
+async def back_button_process(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    user_id = callback.from_user.id
+    language = await get_language(user_id)
+
+    data = await state.get_data()
+    meal_data = data.get("meal_data", {})
+
+    calorie_text = await get_localized_message(language, "calorie")
+    protein_text = await get_localized_message(language, "protein")
+    fat_text = await get_localized_message(language, "fat")
+    carbs_text = await get_localized_message(language, "carbs")
+
+    text = (
+        f"{meal_data['food_name']}\n"
+        f"🔥 {calorie_text}: {meal_data['calories']} kkal\n"
+        f"🍗 {protein_text}: {meal_data['protein']} g\n"
+        f"🥑 {fat_text}: {meal_data['fat']} g\n"
+        f"🍞 {carbs_text}: {meal_data['carbs']} g\n\n"
+        f"<i>{await get_localized_message(language, 'confirm_meal_prompt')}</i>"
+    )
+
+    text_button_1 = await get_localized_message(language, "save_button")
+    text_button_2 = await get_localized_message(language, "edit_grams_button")
+    text_button_3 = await get_localized_message(language, "cancel_button")
+
+    keyboard = types.InlineKeyboardMarkup(inline_keyboard=[
+        [types.InlineKeyboardButton(text=text_button_1, callback_data="save_meal")],
+        [types.InlineKeyboardButton(text=text_button_2, callback_data="edit_grams")],
+        [types.InlineKeyboardButton(text=text_button_3, callback_data="cancel_meal")]
+    ])
+
+    await callback.message.answer(text, reply_markup=keyboard, parse_mode="html")
+
+
 @dp.callback_query(lambda c: c.data.startswith("edit_param:"))
 async def start_edit_param(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
@@ -397,6 +434,7 @@ async def handle_new_value(message: types.Message, state: FSMContext):
         f"🍗 {protein_text}: {meal_data['protein']} g\n"
         f"🥑 {fat_text}: {meal_data['fat']} g\n"
         f"🍞 {carbs_text}: {meal_data['carbs']} g"
+        f"<i>{await get_localized_message(language, 'confirm_meal_prompt')}</i>"
     )
 
     text_button_1 = await get_localized_message(language, "save_button")
@@ -411,7 +449,7 @@ async def handle_new_value(message: types.Message, state: FSMContext):
 
     param_updated_message = await get_localized_message(language, "param_updated")
     await message.answer(param_updated_message)
-    await message.answer(text, reply_markup=keyboard)
+    await message.answer(text, reply_markup=keyboard, parse_mode="html")
 
 
 @dp.message(UserSettingsStates.choose_goal)
