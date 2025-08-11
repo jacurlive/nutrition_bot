@@ -26,7 +26,8 @@ async def analyze_image_with_gpt(language, photo_path):
   "calories": примерное число,     // ккал
   "protein": примерное число,      // граммы
   "fat": примерное число,          // граммы
-  "carbs": примерное число         // граммы
+  "carbs": примерное число,         // граммы
+  "grams": 100 грам по правилам нутрициологии
 }
 
 Если определить еду невозможно, верни:
@@ -50,7 +51,8 @@ Return your answer strictly as **JSON**, with no extra text, formatting, or comm
   "calories": estimated number,
   "protein": estimated number,
   "fat": estimated number,
-  "carbs": estimated number
+  "carbs": estimated number,
+  "grams": 100 grams according to the rules of nutrition
 }
 
 If the food cannot be identified, return:
@@ -74,7 +76,8 @@ Javobingizni faqat quyidagi **JSON** formatida bering, hech qanday qo‘shimcha 
   "calories": taxminiy son,
   "protein": taxminiy son,
   "fat": taxminiy son,
-  "carbs": taxminiy son
+  "carbs": taxminiy son,
+  "grams": Oziqlanish qoidalariga ko'ra 100 gramm
 }
 
 Agar ovqatni aniqlab bo‘lmasa, javob shunday bo‘lsin:

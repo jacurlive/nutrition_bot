@@ -47,7 +47,8 @@ class Localization:
             "choose_message": "Что вы хотите изменить?",
             "type_new_param": "Введите новое значение:",
             "invalid_number": "Введите корректное положительное число.",
-            "param_updated": "✅ Значение обновлено."
+            "param_updated": "✅ Значение обновлено.",
+            "new_gram": "Введите новый грамм еды:"
         },
         "en": {
             "add_meal_btn": "📸 Add meal",
@@ -91,7 +92,8 @@ class Localization:
             "choose_message": "What you want change?",
             "type_new_param": "Type new parametr:",
             "invalid_number": "Please enter a valid positive number.",
-            "param_updated": "✅ Value updated."
+            "param_updated": "✅ Value updated.",
+            "new_gram": "Type new gram of food:"
         },
         "uz": {
             "add_meal_btn": "📸 Ovqat qoshish",
@@ -135,7 +137,8 @@ class Localization:
             "choose_message": "Nimani o'zgartirmoqchisiz?",
             "type_new_param": "Yangi qiymat kiriting:",
             "invalid_number": "Iltimos, to‘g‘ri musbat son kiriting.",
-            "param_updated": "✅ Qiymat yangilandi."
+            "param_updated": "✅ Qiymat yangilandi.",
+            "new_gram": "Ovqat uchun yangi gramni yozing:"
         }
     }
 
