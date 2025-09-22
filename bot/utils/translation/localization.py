@@ -10,7 +10,7 @@ class Localization:
             "my_diary_btn": "📔 Мой дневник",
             "settings_btn": "⚙️ Настройки",
             "help_btn": "❓ Помощь",
-            "main_menu": "🟢 Главное менью",
+            "main_menu": "🟢 Главное меню",
             "send_photo_meal": "📸 Пожалуйста, Отправьте фотографию еды.",
             "settings_menu": "⚙️ Меню настроек:",
             "change_goal": "🎯 Цель калорий",
